@@ -132,34 +132,42 @@ df = pandas.read_csv()
 
 Quel est le type de l'objet `df`?
 ```
-
+Contient le data frame
 ```
 
 ##### Descriptions d'une table de données
 Que permettent les méthodes suivantes?
 ###### df.shape
 ```
+Nombre de lignes et de colonnes
 ```
 ###### df.head()
 ```
+Afich les 5 premiers lignes
 ```
 ###### df.tail()
 ```
+Affiche les 5 derniers lignes
 ```
 ###### df.columns
 ```
+Affiche le noms des colonnes
 ```
 ###### df.dtypes
 ```
+Types de chaque colonne
 ```
 ###### df.info
 ```
+Le nombre de lignes non null pour chaque colonne avec son type
 ```
 ###### df.describe()
 ```
+Il decrit la Abundance Ratio Adj. P-Value avec la moyenne, min , max etc...         
 ```
 ###### df.dropna()
 ```
+Supprime les lignes qui ont des valeurs NULL NA
 ```
 
 ##### Accès aux éléments d'une table de données
@@ -168,10 +176,14 @@ Que permettent les méthodes suivantes?
 values = df[['Description', 'Gene Symbol']]
 ```
 
-Quel est le type de `values` ?
+Quel est le type de `values` ? 
 
 Verifiez si certaines méthodes de `DataFrame` lui sont applicables.
 Ce type supporte l'accès par indice et les slice `[a:b]`
+
+```
+Sous data frame
+```
 
 ##### Accès indicé
 
@@ -234,36 +246,58 @@ df.loc[ df['Gene Symbol'].isin(['fadR', 'arcA'] ) ]
 #### Appliquons ces outils à l'analyse de données protéomique
 
 ##### 1. Chargez le contenu du fichier `data/TCL_wt1.tsv` dans un notebook en eliminant les lignes porteuses de valeurs numériques aberrantes
+```python
+df = pandas.read_csv("data/TCL_wt1.tsv", sep = "\t", na_values="#VALEUR!")
+df = df.dropna()
+df.dtypes
+
+```
 
 ##### 2. Representez par un histogramme les valeurs de `Log2 Corrected Abundance Ratio`
+
+```python
+v = df['Log2 Corrected Abundance Ratio'].tolist()
+
+fig, ax = plt.subplots()
+
+ax.hist(x, bins = 50)
+ax.set_title('Histogramme les valeurs de Log2 Corrected Abundance Ratio')
+
+fig.show()
+
+```
+
+```python
+```
 
 <!-- ##### 3. A partir de cette échantillon de ratio d'abondance,  estimez la moyenne <img src="https://render.githubusercontent.com/render/math?math=\mu"> et l'ecart-type <img src="https://render.githubusercontent.com/render/math?math=\sigma"> d'une loi normale. -->
 
 ##### 3. A partir de cette échantillon de ratio d'abondance,  estimez la moyenne $\mu$ et l'ecart-type $\sigma$ d'une loi normale.
-```
-
-
+```python
+mean = np.mean(v)
+et = np.std(v)
+mean, et
 ```
 
 ##### 4. Superposez la densité de probabilité de cette loi sur l'histogramme. Attention, la densité de probabilité devra être mis à l'echelle de l'histogramme (cf ci-dessous)
 
 
 ```python
-# _ est le vecteur des valeurs d'abondance
 fig, ax = plt.subplots()
-hist = ax.hist(_, bins=100) # draw histogram
-x = np.linspace(min(_), max(_), 100) # generate PDF domain points
-dx = hist[1][1] - hist[1][0] # Get single value bar height
-scale = len(_)*dx # scale accordingly
-ax.plot(x, norm.pdf(x, mu, sigma)*scale) # compute theoritical PDF and draw it
+hist = ax.hist(v, bins=100) 
+x = np.linspace(min(v), max(v), 100) 
+dx = hist[1][1] - hist[1][0] 
+scale = len(v)*dx 
+ax.plot(x, norm.pdf(x, mean, et)*scale) 
+savefig("histogram_log2FC.png")
 ```
 
-![Histogramme à inserez ici](histogram_log2FC.png "Title")
+![Histogramme à inserez ici](histogram_log2FC.png "Histograme")
 
 ##### 5. Quelles remarques peut-on faire à l'observation de l'histogramme et de la loi théorique?
 
 ```
-
+La distribution des valeurs ne suit pas une loi normale
 
 ```
 
@@ -277,7 +311,26 @@ Sont condidérées comme surabondantes les proteines remplissant ces deux critè
 * $\text{Log}_2(\text{abundance ratio})\gt\mu%2B\sigma$
 * $\text{p-value}<0.001$
 
-![Volcano plot + quadrant à inserez ici](histogram_log2FC.png "Title")
+```python
+log = df["-LOG10 Adj.P-val"].tolist()
+abd = df["Log2 Corrected Abundance Ratio"].tolist()
+
+log, abd
+
+fig, ax = plt.subplots()
+
+ax.scatter(abd, log)
+ax.set_title('Volcano plot ')
+ax.set_xlabel('Log2 Corrected Abundance Ratio')
+_ = ax.set_ylabel("-LOG10 Adj.P-val")
+
+p_min = 3
+
+ax.axvline(mean)
+_ = ax.axhline(3)
+
+```
+![Volcano plot + quadrant à inserez ici](Volcano_log2FC.png "Title")
 
 ### Analyse Fonctionelle de pathway
 
@@ -287,8 +340,29 @@ Nous allons implementer une approche ORA (Over Representation Analysis) naive.
 
 Quelles sont leurs identifiants UNIPROT ?
 ``` 
-
-
+['P23721',
+ 'P77804',
+ 'P0A6K6',
+ 'P0A799',
+ 'P0A7G6',
+ 'P0A6F3',
+ 'P25745',
+ 'P0A6M8',
+ 'P0A6L0',
+ 'P0A8V6',
+ 'P0A9Q1',
+ 'P02358',
+ 'P0ACF8',
+ 'P62399',
+ 'P0A905',
+ 'P76506',
+ 'P13036',
+ 'P10384',
+ 'P06971',
+ 'P0A910',
+ 'P06996',
+ 'P76344',
+ 'P02931']
 
 ```
 
@@ -304,6 +378,14 @@ Les `entry` du fichier `data/uniprot-proteome_UP000000625.xml` présentent des b
 </dbReference>
 ```
 
+```python
+df_surABD = df.loc[(df['-LOG10 Adj.P-val'] > 3 )  & (df['Log2 Corrected Abundance Ratio'] > mean ) ]
+
+print(df_surABD.shape)
+
+ACCESSION = df_surABD['Accession'].tolist()
+ACCESSION
+```
 Pour vous aider à obtenir la liste des termes GO des protéines surabondantes, voici la fonction `getAccessionGOTerms(xml_file, uniprotID)`
 qui extrait du fichier de protéome uniprot xml fourni en 1er argument les termes GO portés par la protéine au code uniprot fourni en deuxième argument.
 
@@ -330,8 +412,13 @@ def getAccessionGOTerms(xmlFile, accession):
             match_go_terms.append((gID, gName))
         break
     return match_go_terms
-getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", "P0A8V6")
+    
+list_go = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", ACCESSION[0])
+list_go
 ```
+
+
+``
 A l'aide de cette fonction, il devrait être possible de construire le dictonnaire des termes GO de toutes les protéines surabondantes précedemment identifiées.
 Ce dictionnaire pourrait être de la forme suivante:
 ```python
@@ -346,6 +433,33 @@ Ce dictionnaire pourrait être de la forme suivante:
   }
 ```
 Vous implémenterez la construction de ce dictionnaire et ainsi stockerez, pour la suite de l'analyse, les représentations des termes GO parmi les protéines surabondantes.
+
+
+```python
+go_dico = {}
+
+
+for i, acc in enumerate(ACCESSION):
+    #if i == 5:
+    #    break;
+    #print(f"Lecture de {acc} :")
+    go_term_tuple = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", acc)
+    print(i, acc, go_term_tuple)
+    for go_tuple in go_term_tuple:
+        go_id , go_name = go_tuple
+        if not go_id in go_dico:
+            go_dico[go_id] = {
+                "ID" : go_id,
+                "name" : go_name,
+                "carried_by" : []
+            }
+        go_dico[go_id]["carried_by"].append(acc)
+
+    #print(go_dico))
+            
+print(go_dico)
+```
+
 
 #### 3. Obtention des paramètres du modèle
 
@@ -362,7 +476,51 @@ Completer le tableau ci-dessous avec les quantités vous semblant adéquates pou
 | n | nombre d'observations| |
 | N | nombre d'elements observables| |
 
+
+```
+    la proba si on tire aleatoriemnt d'observer, parmi les prot qu'on a tier, un certain nombre de prot qui possede ce terme GO.
+```
+
 #### 4. Calcul de l'enrichissement en fonctions biologiques
+```python
+import json
+from scipy.stats import hypergeom
+background = {}
+with open("data/EColiK12_GOcounts.json", "r") as fp:
+    background = json.load(fp)["go_terms"]
+"""eg:
+ {'GO:0000006': {'count': 1,
+   'name': 'F:high-affinity zinc transmembrane transporter activity'}
+
+"""
+def compute_pvalue(GO_term:dict, background, ttl_abdnt :int, N = 1800):
+    """ Compute pvalue of enrichissment of passed GO_term
+    Where GO_term is of the shape :
+        { 'ID' : 'GO:0000006', 'name' : "blabla", 'carried_by' : ["P0000", "P11111"] }
+    """
+    
+    GO_id = GO_term['ID']
+    GO_name = GO_term['name']
+    
+    k_obs = len(GO_term["carried_by"]) # observed nb of success
+    K = background[GO_id]['count']
+    rv = hypergeom(N, K, ttl_abdnt)
+    p_value = 0 # pvalue = P(X>=k_obs)
+    for k in range(k_obs, ttl_abdnt + 1):
+        p_value += rv.pmf(k)
+    return p_value, GO_id, GO_name
+
+```
+```python
+all_scores = []
+
+for go_id in go_dico.keys():
+    all_scores.append(compute_pvalue(go_dico[go_id], background, 23, 1800))
+
+sorted(all_scores, key = lambda t:t[0])
+
+```
+
 
 A l'aide du contenu de `data/EColiK12_GOcounts.json` parametrez la loi hypergeometrique et calculez la pvalue
 de chaque terme GO portés par les protéines surabondantes. Vous reporterez ces données dans le tableau ci-dessous

@@ -132,42 +132,42 @@ df = pandas.read_csv()
 
 Quel est le type de l'objet `df`?
 ```
-Contient le data frame
+df contient un objet de type data frame
 ```
 
 ##### Descriptions d'une table de données
 Que permettent les méthodes suivantes?
 ###### df.shape
 ```
-Nombre de lignes et de colonnes
+Affiche le nombre de lignes et de colonnes
 ```
 ###### df.head()
 ```
-Afich les 5 premiers lignes
+Affiche les 5 premières lignes
 ```
 ###### df.tail()
 ```
-Affiche les 5 derniers lignes
+Affiche les 5 dernières lignes
 ```
 ###### df.columns
 ```
-Affiche le noms des colonnes
+Affiche les noms des colonnes
 ```
 ###### df.dtypes
 ```
-Types de chaque colonne
+Affiche le type de chaque colonne
 ```
 ###### df.info
 ```
-Le nombre de lignes non null pour chaque colonne avec son type
+Affiche le nombre de valeurs non nulles pour chaque colonne ainsi que leur type
 ```
 ###### df.describe()
 ```
-Il decrit la Abundance Ratio Adj. P-Value avec la moyenne, min , max etc...         
+Décrit les colonnes numériques avec la moyenne, le minimum, le maximum ...     
 ```
 ###### df.dropna()
 ```
-Supprime les lignes qui ont des valeurs NULL NA
+Supprime les lignes qui ont des valeurs NULL/NA
 ```
 
 ##### Accès aux éléments d'une table de données
@@ -182,7 +182,12 @@ Verifiez si certaines méthodes de `DataFrame` lui sont applicables.
 Ce type supporte l'accès par indice et les slice `[a:b]`
 
 ```
-Sous data frame
+values est une sous-dataframe de df. Les methodes lui sont bien applicables.
+Exemple:
+'values.head()
+values.shape
+values.info()
+values.columns'
 ```
 
 ##### Accès indicé
@@ -191,17 +196,17 @@ On peut accéder aux valeurs du DataFrame via des indices ou plages d'indice. La
 Il y a différentes manières de le faire, l'utilisation de `.iloc[slice_ligne,slice_colonne]` constitue une des solutions les plus simples. N'oublions pas que shape permet d'obtenir les dimensions (lignes et colonnes) du DataFrame.
 ###### Acceder aux cinq premières lignes de toutes les colonnes
 ```python
-
+df.iloc[0:5, :]
 ```
 
 ###### Acceder à toutes les lignes de la dernière colonne
 ```python
-
+df.iloc[:, -1]
 ```
 
 ###### Acceder aux cinq premières lignes des colonnes 0, 2 et 3
 ```python
-
+df.iloc[0:5, [0, 2, 3]]
 ```
 
 ##### Conversion de type
@@ -260,14 +265,10 @@ v = df['Log2 Corrected Abundance Ratio'].tolist()
 
 fig, ax = plt.subplots()
 
-ax.hist(x, bins = 50)
-ax.set_title('Histogramme les valeurs de Log2 Corrected Abundance Ratio')
+ax.hist(v, bins = 50)
+ax.set_title('Histogramme des valeurs de Log2 Corrected Abundance Ratio')
 
 fig.show()
-
-```
-
-```python
 ```
 
 <!-- ##### 3. A partir de cette échantillon de ratio d'abondance,  estimez la moyenne <img src="https://render.githubusercontent.com/render/math?math=\mu"> et l'ecart-type <img src="https://render.githubusercontent.com/render/math?math=\sigma"> d'une loi normale. -->

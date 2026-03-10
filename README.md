@@ -275,9 +275,9 @@ fig.show()
 
 ##### 3. A partir de cette échantillon de ratio d'abondance,  estimez la moyenne $\mu$ et l'ecart-type $\sigma$ d'une loi normale.
 ```python
-mean = np.mean(v)
-et = np.std(v)
-mean, et
+moy = np.mean(v)
+sig = np.std(v)
+mean, sig
 ```
 
 ##### 4. Superposez la densité de probabilité de cette loi sur l'histogramme. Attention, la densité de probabilité devra être mis à l'echelle de l'histogramme (cf ci-dessous)
@@ -289,8 +289,8 @@ hist = ax.hist(v, bins=100)
 x = np.linspace(min(v), max(v), 100) 
 dx = hist[1][1] - hist[1][0] 
 scale = len(v)*dx 
-ax.plot(x, norm.pdf(x, mean, et)*scale) 
-savefig("histogram_log2FC.png")
+ax.plot(x, norm.pdf(x, moy, sig)*scale) 
+fig.savefig("histogram_log2FC.png")
 ```
 
 ![Histogramme à inserez ici](histogram_log2FC.png "Histograme")
@@ -298,8 +298,7 @@ savefig("histogram_log2FC.png")
 ##### 5. Quelles remarques peut-on faire à l'observation de l'histogramme et de la loi théorique?
 
 ```
-La distribution des valeurs ne suit pas une loi normale
-
+La distribution des valeurs ne suit pas une loi normale. L'histogramme est asymétrique et présente un pic plus marqué que la courbe théorique. 
 ```
 
 #### Construction d'un volcano plot
@@ -321,14 +320,14 @@ log, abd
 fig, ax = plt.subplots()
 
 ax.scatter(abd, log)
-ax.set_title('Volcano plot ')
+ax.set_title('Volcano plot: Log2 abundance ratio vs -Log10 p-value')
 ax.set_xlabel('Log2 Corrected Abundance Ratio')
 _ = ax.set_ylabel("-LOG10 Adj.P-val")
 
 p_min = 3
 
-ax.axvline(mean)
-_ = ax.axhline(3)
+ax.axvline(moy)
+_ = ax.axhline(p_min)
 
 ```
 ![Volcano plot + quadrant à inserez ici](Volcano_log2FC.png "Title")
@@ -364,7 +363,6 @@ Quelles sont leurs identifiants UNIPROT ?
  'P06996',
  'P76344',
  'P02931']
-
 ```
 
 #### 2. Listez les termes GO portés par ces protéines surabondates
@@ -415,7 +413,6 @@ def getAccessionGOTerms(xmlFile, accession):
     return match_go_terms
     
 list_go = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", ACCESSION[0])
-list_go
 ```
 
 
@@ -441,9 +438,6 @@ go_dico = {}
 
 
 for i, acc in enumerate(ACCESSION):
-    #if i == 5:
-    #    break;
-    #print(f"Lecture de {acc} :")
     go_term_tuple = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", acc)
     print(i, acc, go_term_tuple)
     for go_tuple in go_term_tuple:
@@ -455,8 +449,6 @@ for i, acc in enumerate(ACCESSION):
                 "carried_by" : []
             }
         go_dico[go_id]["carried_by"].append(acc)
-
-    #print(go_dico))
             
 print(go_dico)
 ```

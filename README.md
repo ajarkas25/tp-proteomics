@@ -541,9 +541,8 @@ de chaque terme GO portés par les protéines surabondantes. Vous reporterez ces
 
 
 Quelle interpretation biologique faites-vous de cet enrichissement en termes GO ?
-```
-Les termes GO les plus significatifs sont principalement liés à la membrane externe et au transport transmembranaire. Cela suggère que les protéines surabondantes sont majoritairement impliquées dans les échanges entre la cellule et son environnement. Ces résultats indiquent donc un enrichissement en fonctions liées au transport et aux protéines membranaires.
-```
+
+'Les termes GO les plus significatifs sont principalement liés à la membrane externe et au transport transmembranaire. Cela suggère que les protéines surabondantes sont majoritairement impliquées dans les échanges entre la cellule et son environnement. Ces résultats indiquent donc un enrichissement en fonctions liées au transport et aux protéines membranaires.'
 
 
 ### Analyse des interactions répertoriées dans STRING

@@ -181,10 +181,10 @@ Quel est le type de `values` ?
 Verifiez si certaines méthodes de `DataFrame` lui sont applicables.
 Ce type supporte l'accès par indice et les slice `[a:b]`
 
-```
-values est une sous-dataframe de df. Les methodes lui sont bien applicables.
+'values' est une sous-dataframe de df. Les methodes lui sont bien applicables.
 Exemple:
-'values.head()
+```python
+values.head()
 values.shape
 values.info()
 values.columns'
@@ -277,7 +277,7 @@ fig.show()
 ```python
 moy = np.mean(v)
 sig = np.std(v)
-mean, sig
+moy, sig
 ```
 
 ##### 4. Superposez la densité de probabilité de cette loi sur l'histogramme. Attention, la densité de probabilité devra être mis à l'echelle de l'histogramme (cf ci-dessous)
@@ -329,6 +329,7 @@ p_min = 3
 ax.axvline(moy)
 _ = ax.axhline(p_min)
 
+fig.savefig("Volcano_log2FC.png")
 ```
 ![Volcano plot + quadrant à inserez ici](Volcano_log2FC.png "Title")
 
@@ -339,7 +340,16 @@ Nous allons implementer une approche ORA (Over Representation Analysis) naive.
 ##### 1. Retrouvez les entrées du fichier TSV des protéines surabondantes
 
 Quelles sont leurs identifiants UNIPROT ?
-``` 
+``` python
+df_surABD = df.loc[(df['-LOG10 Adj.P-val'] > 3 )  & (df['Log2 Corrected Abundance Ratio'] > moy ) ]
+
+ACCESSION = df_surABD['Accession'].tolist()
+ACCESSION
+```
+
+'Résultats:'
+
+```
 ['P23721',
  'P77804',
  'P0A6K6',
@@ -377,14 +387,6 @@ Les `entry` du fichier `data/uniprot-proteome_UP000000625.xml` présentent des b
 </dbReference>
 ```
 
-```python
-df_surABD = df.loc[(df['-LOG10 Adj.P-val'] > 3 )  & (df['Log2 Corrected Abundance Ratio'] > mean ) ]
-
-print(df_surABD.shape)
-
-ACCESSION = df_surABD['Accession'].tolist()
-ACCESSION
-```
 Pour vous aider à obtenir la liste des termes GO des protéines surabondantes, voici la fonction `getAccessionGOTerms(xml_file, uniprotID)`
 qui extrait du fichier de protéome uniprot xml fourni en 1er argument les termes GO portés par la protéine au code uniprot fourni en deuxième argument.
 
@@ -413,8 +415,8 @@ def getAccessionGOTerms(xmlFile, accession):
     return match_go_terms
     
 list_go = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", ACCESSION[0])
+list_go
 ```
-
 
 ``
 A l'aide de cette fonction, il devrait être possible de construire le dictonnaire des termes GO de toutes les protéines surabondantes précedemment identifiées.
@@ -439,7 +441,6 @@ go_dico = {}
 
 for i, acc in enumerate(ACCESSION):
     go_term_tuple = getAccessionGOTerms("./data/uniprot-proteome_UP000000625.xml", acc)
-    print(i, acc, go_term_tuple)
     for go_tuple in go_term_tuple:
         go_id , go_name = go_tuple
         if not go_id in go_dico:
@@ -449,10 +450,14 @@ for i, acc in enumerate(ACCESSION):
                 "carried_by" : []
             }
         go_dico[go_id]["carried_by"].append(acc)
-            
-print(go_dico)
 ```
+Pour tester l'affichage du contenu du dictionnaire, on peut faire:
 
+```python
+for GO, sous_dico in go_dico.items():
+    for key, value in sous_dico.items():
+        print(GO, key, value)
+```
 
 #### 3. Obtention des paramètres du modèle
 
@@ -464,10 +469,10 @@ Completer le tableau ci-dessous avec les quantités vous semblant adéquates pou
 
 | Symboles | Paramètres | Quantités Biologiques |
 | --- | --- | --- |
-| k | nombre de succès observés| |
-| K | nombre de succès possibles| |
-| n | nombre d'observations| |
-| N | nombre d'elements observables| |
+| k | nombre de succès observés | nombre de protéines surabondantes portant le terme GO considéré | 
+| K | nombre de succès possibles | nombre total de protéines du protéome portant ce terme GO |
+| n | nombre d'observations | nombre total de protéines surabondantes |
+| N | nombre d'elements observables | nombre total de protéines dans le protéome |
 
 
 ```
@@ -476,6 +481,16 @@ Completer le tableau ci-dessous avec les quantités vous semblant adéquates pou
 
 #### 4. Calcul de l'enrichissement en fonctions biologiques
 ```python
+import json
+from scipy.stats import hypergeom
+background = {}
+with open("data/EColiK12_GOcounts.json", "r") as fp:
+    background = json.load(fp)["go_terms"]
+"""eg:
+ {'GO:0000006': {'count': 1,
+   'name': 'F:high-affinity zinc transmembrane transporter activity'}
+
+"""
 import json
 from scipy.stats import hypergeom
 background = {}
@@ -502,27 +517,36 @@ def compute_pvalue(GO_term:dict, background, ttl_abdnt :int, N = 1800):
     for k in range(k_obs, ttl_abdnt + 1):
         p_value += rv.pmf(k)
     return p_value, GO_id, GO_name
-
 ```
+
 ```python
 all_scores = []
 
 for go_id in go_dico.keys():
     all_scores.append(compute_pvalue(go_dico[go_id], background, 23, 1800))
 
-sorted(all_scores, key = lambda t:t[0])
-
+for p, go_id, go_name in sorted(all_scores)[:5]:
+    occurrence = len(go_dico[go_id]["carried_by"])
+    print(go_id, go_name, occurrence, p)
 ```
 
 
 A l'aide du contenu de `data/EColiK12_GOcounts.json` parametrez la loi hypergeometrique et calculez la pvalue
 de chaque terme GO portés par les protéines surabondantes. Vous reporterez ces données dans le tableau ci-dessous
 
-| identifiant GO | définition | occurence | pvalue|
-|---|---|---|---|
-|   |   |   |   |
+| identifiant GO | définition | occurrence | pvalue |
+|----------------|------------|------------|--------|
+| GO:0009279 | C:cell outer membrane | 8 | 4.46e-05 |
+| GO:0009264 | P:deoxyribonucleotide catabolic process | 2 | 1.56e-04 |
+| GO:0034220 | P:ion transmembrane transport | 3 | 3.72e-04 |
+| GO:0046930 | C:pore complex | 3 | 1.55e-03 |
+| GO:0015288 | F:porin activity | 3 | 1.80e-03 |
+
 
 Quelle interpretation biologique faites-vous de cet enrichissement en termes GO ?
+```
+Les termes GO les plus significatifs sont principalement liés à la membrane externe et au transport transmembranaire. Cela suggère que les protéines surabondantes sont majoritairement impliquées dans les échanges entre la cellule et son environnement. Ces résultats indiquent donc un enrichissement en fonctions liées au transport et aux protéines membranaires.
+```
 
 
 ### Analyse des interactions répertoriées dans STRING

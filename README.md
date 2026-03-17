@@ -475,10 +475,6 @@ Completer le tableau ci-dessous avec les quantités vous semblant adéquates pou
 | N | nombre d'elements observables | nombre total de protéines dans le protéome |
 
 
-```
-    la proba si on tire aleatoriemnt d'observer, parmi les prot qu'on a tier, un certain nombre de prot qui possede ce terme GO.
-```
-
 #### 4. Calcul de l'enrichissement en fonctions biologiques
 ```python
 import json
@@ -518,6 +514,7 @@ def compute_pvalue(GO_term:dict, background, ttl_abdnt :int, N = 1800):
         p_value += rv.pmf(k)
     return p_value, GO_id, GO_name
 ```
+Affichage des 5 premiers termes GO ayant les p-values les plus faibles pour faire court:
 
 ```python
 all_scores = []
